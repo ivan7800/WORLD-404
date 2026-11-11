@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {initialState,advance,visitLocation,investigateScene,availablePuzzle,solvePuzzle,startCombat,fight,safeLoad} from '../src/engine.js';
+const good=()=>1;
+test('la deducción requiere dos escenas investigadas',()=>{const s=initialState();advance(s);assert.equal(availablePuzzle(s),null);visitLocation(s,0);investigateScene(s,0,good);assert.equal(availablePuzzle(s),null);visitLocation(s,1);investigateScene(s,0,good);assert.ok(availablePuzzle(s));});
+test('resolver la pista conectada otorga conocimiento y no se repite',()=>{const s=initialState();advance(s);for(let i=0;i<2;i++){visitLocation(s,i);investigateScene(s,0,good);}solvePuzzle(s,1);assert.equal(s.resolve,2);assert.deepEqual(s.linkedClues,['faro']);solvePuzzle(s,1);assert.equal(s.resolve,2);});
+test('una deducción incorrecta tiene consecuencias',()=>{const s=initialState();advance(s);for(let i=0;i<2;i++){visitLocation(s,i);investigateScene(s,0,good);}const before=s.doom;solvePuzzle(s,0);assert.equal(s.doom,before+7);});
+test('se puede curar una hemorragia en combate',()=>{const s=initialState();s.phase='encounter';startCombat(s);s.combat.affliction='hemorrhage';s.combat.afflictionTurns=2;fight(s,'recover',()=>0);assert.equal(s.combat.affliction,null);assert.equal(s.combat.afflictionTurns,0);});
+test('migración v6 a v7 conserva decisiones',()=>{const s=initialState();s.version=6;delete s.linkedClues;s.decisions=[{caseId:'faro',effect:'truth',choice:1}];const loaded=safeLoad(JSON.stringify(s));assert.equal(loaded.version,10);assert.deepEqual(loaded.linkedClues,[]);assert.equal(loaded.decisions.length,1);});
+test('partida con datos de estados alterados antiguos carga',()=>{const s=initialState();s.phase='combat';s.combat={hp:10,maxHp:10,turn:2,stage:1};const loaded=safeLoad(JSON.stringify(s));assert.equal(loaded.combat.affliction,null);assert.equal(loaded.combat.afflictionTurns,0);});

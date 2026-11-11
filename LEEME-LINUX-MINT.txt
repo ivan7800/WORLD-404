@@ -1,0 +1,23 @@
+WORLD-404 - SOLUCIÓN DE ARRANQUE EN LINUX MINT
+================================================
+1. Extrae todo el ZIP (no ejecutes scripts dentro del gestor de archivos comprimidos).
+2. Abre una terminal en la carpeta WORLD-404 y ejecuta:
+     bash WORLD-404-LinuxMint.sh
+3. El juego aparecerá en http://127.0.0.1:8765/
+   Si el navegador no se abre solo, copia esa dirección en Firefox o Chrome.
+4. Deja la terminal abierta mientras juegas.
+
+PARA TENER ICONO EN EL MENU DE LINUX MINT:
+     bash INSTALAR-ACCESO-DIRECTO-LinuxMint.sh
+   Después abre el menú > Juegos > WORLD-404.
+
+SI APARECE UN ERROR:
+- 'python3: command not found': sudo apt install python3
+- 'Address already in use': existe un proceso en el puerto 8765;
+    ss -ltnp | grep :8765
+  Cierra ese proceso y vuelve a intentar. No mates procesos desconocidos.
+- No se abre el navegador: visita manualmente http://127.0.0.1:8765/
+- No carga ninguna imagen: verifica que assets/ esté junto a index.html.
+
+GUARDADOS: el juego conserva el origen http://127.0.0.1:8765 para no
+cambiar los datos locales de las versiones anteriores.

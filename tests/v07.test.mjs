@@ -1,0 +1,9 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {initialState,advance,explore,chooseDilemma,visitLocation,investigateScene,availableEcho,resolveEcho,startCombat,safeLoad,finishCase} from '../src/engine.js';
+test('decisión irreversible antes de enfrentamiento',()=>{const s=initialState();advance(s);explore(s,0,()=>1);assert.equal(s.phase,'dilemma');chooseDilemma(s,0);assert.equal(s.phase,'encounter');assert.equal(s.decisions.length,1);chooseDilemma(s,1);assert.equal(s.decisions.length,1);});
+test('dilema altera estadísticas y resistencia enemiga',()=>{const s=initialState();s.phase='dilemma';s.doom=10;chooseDilemma(s,0);assert.equal(s.doom,6);startCombat(s);assert.equal(s.combat.hp,s.combat.maxHp);assert.ok(s.combat.hp>0);});
+test('eco solo aparece tras descubrir pista y no puede repetirse',()=>{const s=initialState();advance(s);assert.equal(availableEcho(s),null);visitLocation(s,0);investigateScene(s,0,()=>1);assert.ok(availableEcho(s));resolveEcho(s,0);assert.equal(s.resolve,1);assert.equal(availableEcho(s),null);resolveEcho(s,0);assert.equal(s.resolve,1);});
+test('migración desde v5 a v6 preserva progreso',()=>{const s=initialState();s.version=5;s.caseIndex=2;delete s.decisions;delete s.echoes;delete s.resolve;const next=safeLoad(JSON.stringify(s));assert.equal(next.version,10);assert.equal(next.caseIndex,2);assert.deepEqual(next.decisions,[]);});
+test('un desenlace alternativo responde a decisiones',()=>{const s=initialState();s.caseIndex=4;s.clues=['a','b','c','d'];s.doom=15;s.decisions=['faro','hospital','mercado','tuneles'].map(caseId=>({caseId,effect:'mercy',choice:0}));finishCase(s);assert.equal(s.ending,'rescate');});
+test('el final sellado exige claves suficientes',()=>{const s=initialState();s.caseIndex=4;s.clues=['a','b','c','d'];s.flags=['1','2','3'];s.doom=20;s.resolve=3;finishCase(s);assert.equal(s.ending,'sellado');});
