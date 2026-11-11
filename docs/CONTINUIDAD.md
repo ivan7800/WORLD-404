@@ -15,7 +15,7 @@ Esta matriz describe **la campaña implementada** y las consecuencias derivadas 
 - `visited`: `<caseId>:<sceneIndex>`; dos lugares dan acceso a `availablePuzzle`.
 - `linkedClues` desbloquea `prepareSeal` y abarata el combate en cuatro puntos de vida.
 - `decisions` conserva una bifurcación moral por caso con `effect: 'mercy'|'truth'`.
-- `routeChoices`: cautelosa consume suministro y debilita jefe; arriesgada gana suministros y aumenta Marea.
+- `routeChoices`: cautelosa consume suministro, debilita jefe y comienza con guardia y un impulso; arriesgada gana suministros y aumenta Marea.
 - `caseTwists`: exactamente una de tres variantes por expediente, calculada desde `runSeed` y registrada tras resolverla.
 - `omens`, `sideStories`, `anomalies`, `echoes`, `worldVisits` y `contacts` conservan alternativas registradas.
 - `aftermathForCase` deriva diez posibles secuelas únicamente de `decisions`; no añade campos al guardado ni modifica balance.

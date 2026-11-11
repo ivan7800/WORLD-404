@@ -32,6 +32,7 @@ async function smoke(browserType){
   assert.equal(await page.locator('#title').isVisible(),true);
   await snap('03-investigacion');
   await page.locator('#actions button').first().click();
+  await page.locator('.action-conclude summary').click();
   await page.locator('#actions button').filter({hasText:'CERRAR INVESTIGACIÓN'}).first().click();
   await page.locator('#actions button').first().click();
   assert.equal(await page.getByRole('button',{name:'ENFRENTARSE A LA CRIATURA'}).isVisible(),true);
