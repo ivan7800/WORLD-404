@@ -36,3 +36,6 @@ npm run dist:linux  # Linux Mint / runner Ubuntu
 npm run dist:win
 ```
 En el PR se debe consultar Actions antes de declarar aprobado el build.
+
+## Hallazgo QA de navegador — bloqueo crítico corregido en la rama
+La primera ejecución real de Playwright (`42940146417`) encontró el menú inicial oculto al abrir Chromium. La inspección detectó un acceso a `archiveFilter` antes de inicializar el `let` al llamar `render()` durante el arranque. Se reubica la inicialización antes de la primera renderización. Repetir la prueba de navegador para acreditar el arreglo; no se considera verificado solo por inspección.

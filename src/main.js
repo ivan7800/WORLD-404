@@ -26,7 +26,7 @@ function actionType(label){
  if(/^(PRESAGIO|ANOMALÍA OPCIONAL|HISTORIA OPCIONAL|RUTA |ESCUCHAR INTERFERENCIA|DESTRUIR LA GRABACIÓN|CONSULTAR NOTAS)/.test(label))return 'optional';
  return 'primary';
 }
-let actionContainers={};
+let actionContainers={};let archiveFilter='all';
 function groupActions(type){
  if(actionContainers[type])return actionContainers[type];
  const labels={primary:'CONTINUAR LA HISTORIA',investigate:'INVESTIGACIÓN Y TESTIGOS',optional:'ACTIVIDADES OPCIONALES',travel:'DESPLAZARSE POR SAN TELMO',conclude:'⚠ CERRAR INVESTIGACIÓN · PUNTO DE NO RETORNO'};
@@ -162,7 +162,6 @@ function renderSceneExtra(state,activeCase){
 
 
 /** Diegetic evidence dossier; all text is inserted via textContent. */
-let archiveFilter='all';
 function renderArchive(){
  const root=$('archive-body');if(!root)return;root.replaceChildren();
  const filter=document.createElement('select');filter.className='archive-filter';filter.setAttribute('aria-label','Filtrar expedientes');for(const [value,label] of [['all','TODOS'],['active','EN CURSO'],['pending','NO CERRADOS'],['closed','CERRADOS']]){const option=document.createElement('option');option.value=value;option.textContent=label;filter.append(option);}filter.value=archiveFilter;filter.addEventListener('change',()=>{archiveFilter=filter.value;renderArchive();});root.append(filter);

@@ -19,7 +19,7 @@ async function smoke(browserType){
  const snap=async stage=>page.screenshot({path:`qa-screenshots/${name}-${stage}.png`,fullPage:true,animations:'disabled'});
  try{
   const response=await page.goto(base+'/',{waitUntil:'networkidle'});assert.equal(response.status(),200);
-  assert.equal(await page.locator('#main-menu').isVisible(),true,'initial menu');
+  assert.equal(await page.locator('#main-menu').isVisible(),true,'initial menu; console: '+errors.join(' | '));
   await snap('01-menu');
   assert.equal(await page.locator('#menu-continue').isDisabled(),true);
   await page.locator('#menu-new').click();
