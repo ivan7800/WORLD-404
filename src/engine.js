@@ -1,4 +1,5 @@
 import {CASES} from './data.js';
+import {aftermathForCase,epilogueLines} from './aftermath.js';
 import {DISTRICTS, CONTACTS, EVENTS} from './world.js';
 import {SIDE_STORIES} from './sidequests.js';
 import {ANOMALIES} from './anomalies.js';
@@ -166,7 +167,7 @@ export function fight(s,action,rng=Math.random){
  b.turn++;return checkEnd(s);
 }
 export function useItem(s,id){if(!s.inventory.includes(id)||s.phase==='ending'||s.phase==='combat')return s;if(id==='medkit'&&s.health<s.maxHealth){s.health=Math.min(s.maxHealth,s.health+6);}else if(id==='tonic'&&s.sanity<s.maxSanity){s.sanity=Math.min(s.maxSanity,s.sanity+4);}else return s;s.inventory.splice(s.inventory.indexOf(id),1);log(s,`Has utilizado ${id==='medkit'?'el botiquín':'el tónico'}.`);return s;}
-export function finishCase(s){const c=currentCase(s);if(!c)return s;if(!s.clues.includes(c.clue))s.clues.push(c.clue);s.combat=null;s.caseIndex++;s.scene=null;s.currentDistrict=null;s.pendingEvent=null;s.health=Math.min(s.maxHealth,s.health+3);s.sanity=Math.min(s.maxSanity,s.sanity+2);s.doom+=8;log(s,`Expediente cerrado: ${c.name}.`);if(s.caseIndex===CASES.length){s.phase='ending';s.ending=s.clues.length===CASES.length&&s.doom<65&&s.flags.length>=3&&s.resolve>=3?'sellado':s.decisions.filter(d=>d.effect==='mercy').length>=4&&s.doom<90?'rescate':'supervivencia';}else s.phase='interlude';return checkEnd(s);}
+export function finishCase(s){const c=currentCase(s);if(!c)return s;if(!s.clues.includes(c.clue))s.clues.push(c.clue);s.combat=null;s.caseIndex++;s.scene=null;s.currentDistrict=null;s.pendingEvent=null;s.health=Math.min(s.maxHealth,s.health+3);s.sanity=Math.min(s.maxSanity,s.sanity+2);s.doom+=8;log(s,`Expediente cerrado: ${c.name}.`);const aftermath=aftermathForCase(s,c.id);if(aftermath){s.notes.push(c.name+': CONSECUENCIA — '+aftermath);log(s,'CONSECUENCIA: '+aftermath);}if(s.caseIndex===CASES.length){s.phase='ending';s.ending=s.clues.length===CASES.length&&s.doom<65&&s.flags.length>=3&&s.resolve>=3?'sellado':s.decisions.filter(d=>d.effect==='mercy').length>=4&&s.doom<90?'rescate':'supervivencia';}else s.phase='interlude';return checkEnd(s);}
 export function advance(s){if(s.phase==='intro'||s.phase==='interlude'){s.phase='map';log(s,`Abres el expediente ${s.caseIndex+1}: ${currentCase(s).name}.`);}return s;}
 export function enterMap(s){if(s.phase==='explore'){s.phase='map';}return s;}
 export function travel(s,districtId,rng=Math.random){
@@ -258,7 +259,7 @@ function validateSaveFields(s){
  if(!stringArray(['inventory','clues','flags','log','visited','notes','worldVisits','contacts','eventHistory','visions','linkedClues','preparedSeals']))return false;
  if(!['decisions','echoes','sideStories','anomalies','routeChoices','omens','caseTwists'].every(k=>Array.isArray(s[k])&&s[k].length<=1000&&s[k].every(x=>x&&typeof x==='object'&&!Array.isArray(x))))return false;
  if(s.currentDistrict!=null&&!DISTRICTS.some(d=>d.id===s.currentDistrict))return false;
- if(s.pendingEvent!=null&&!EVENTS.some(e=>e.id===s.pendingEvent))return false;
+ if(s.phase==='event'&&s.pendingEvent!=null&&!EVENTS.some(e=>e.id===s.pendingEvent))return false;
  if(s.ending!=null&&!['sellado','rescate','supervivencia','muerte','locura','marea'].includes(s.ending))return false;
  if(s.health<0||s.sanity<0||s.supplies<0||s.supplies>8||s.maxHealth>1000||s.maxSanity>1000)return false;
  if(s.phase==='combat'&&(!s.combat||!Number.isFinite(s.combat.maxHp)||s.combat.maxHp<1||!Number.isFinite(s.combat.momentum??0)))return false;
