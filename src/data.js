@@ -15,4 +15,121 @@ export const LOCATION_SETS={
  tuneles:[['Boca del refugio','Los carteles de evacuación apuntan hacia abajo.','Leer las marcas','reason',7,'Las señales dibujan un pentagrama cartográfico.','Los pasillos cambian mientras tomas notas.',1],['Estación inundada','Un tren oxidado espera sobre vías cubiertas de sal.','Inspeccionar los vagones','nerve',7,'Encuentras un billete fechado dentro de treinta años.','Una multitud invisible empieza a subir al tren.',0],['Cámara acústica','Las paredes vibran con un canto de muchas gargantas.','Medir las resonancias','reason',8,'La melodía contiene coordenadas del rompeolas.','Tu pulso adopta el ritmo del coro.',1]],
  cripta:[['Playa retirada','El fondo marino se extiende hasta perderse de vista.','Seguir las huellas','nerve',8,'Un sendero de conchas conduce a una puerta bajo el fango.','El océano vuelve un instante y te deja temblando.',1],['Atrio sumergido','Estatuas de santos desconocidos sostienen relojes sin agujas.','Interpretar los relieves','reason',8,'Las estatuas representan cinco formas de romper el sello.','Los rostros se vuelven hacia ti.',0],['Altar de mareas','La piedra palpita como un órgano vivo.','Estudiar la inscripción','reason',9,'El sello puede restaurarse con las pruebas reunidas.','Una visión te muestra la ciudad devorada.',1]]
 };
-for(const c of CASES){c.locations=LOCATION_SETS[c.id].map(([name,description,text,stat,difficulty,success,failure,reward])=>({name,description,options:[{text,stat,difficulty,success,failure,reward}]}));}
+export const ALTERNATE_INVESTIGATIONS={
+ "faro": [
+  [
+   "Escuchar las campanas desde el agua",
+   "nerve",
+   6,
+   "Bajo la escollera, una campana golpea desde dentro. La marea obedece sus intervalos.",
+   "Una mano de sal tira de ti cuando llega el séptimo tañido."
+  ],
+  [
+   "Reparar el receptor de la radio",
+   "reason",
+   7,
+   "La estática repite la llamada de auxilio de un barco desaparecido hace cuarenta años.",
+   "La radio pronuncia tu fecha de muerte antes de fundirse."
+  ],
+  [
+   "Seguir el rastro del combustible",
+   "nerve",
+   7,
+   "Los bidones llegan desde una barcaza que nunca figura en los registros del puerto.",
+   "El agua negra sube por tus botas como si intentara reconocerte."
+  ]
+ ],
+ "hospital": [
+  [
+   "Hablar por el interfono clausurado",
+   "nerve",
+   7,
+   "Una voz de la planta inexistente te dicta el número de la habitación 404.",
+   "Responde tu propia voz, suplicando que no subas."
+  ],
+  [
+   "Contar los latidos detrás del biombo",
+   "reason",
+   7,
+   "Todas las camas obedecen a un único pulso procedente del sótano.",
+   "Tu corazón se detiene un instante y las cortinas se agitan."
+  ],
+  [
+   "Contrastar los análisis con el mar",
+   "nerve",
+   8,
+   "Las muestras retroceden de la sal; una etiqueta revela el nombre del navío hundido.",
+   "Una ampolla rompe el guante y te deja una marca con forma de llave."
+  ]
+ ],
+ "mercado": [
+  [
+   "Intercambiar un secreto por el manifiesto",
+   "reason",
+   7,
+   "El estibador acepta una palabra inventada. El manifiesto revela el comprador del siguiente lote.",
+   "La palabra se graba en tu lengua y el estibador se niega a mirarte."
+  ],
+  [
+   "Observar al postor sin rostro",
+   "nerve",
+   8,
+   "Reconoces al mismo comprador en tres fotografías separadas por un siglo.",
+   "La campana de cierre suena y la sala empieza a pujar por tu memoria."
+  ],
+  [
+   "Examinar los contratos con luz rasante",
+   "reason",
+   8,
+   "Bajo las firmas aparecen nombres de pacientes del hospital.",
+   "El papel absorbe la luz y deja escrita una deuda a tu nombre."
+  ]
+ ],
+ "tuneles": [
+  [
+   "Seguir la corriente de aire frío",
+   "nerve",
+   8,
+   "El viento conduce a una pared de ladrillo detrás de la cual respira el coro.",
+   "Cada bocanada te devuelve la voz con unos segundos de retraso."
+  ],
+  [
+   "Leer las estaciones tachadas",
+   "reason",
+   8,
+   "Una estación borrada coincide con la ruta de los desaparecidos.",
+   "El nombre de la estación se imprime en tu mano y empieza a doler."
+  ],
+  [
+   "Cantar el intervalo ausente",
+   "nerve",
+   9,
+   "Una voz humana se separa del coro y revela la nota que abre la compuerta.",
+   "El coro responde con tu voz de niño, sin dejarte terminar."
+  ]
+ ],
+ "cripta": [
+  [
+   "Buscar la marea en las conchas",
+   "reason",
+   9,
+   "Las conchas guardan cinco fechas; juntas señalan cuándo se abrió el primer sello.",
+   "La arena se convierte en una boca que repite los nombres de tus aliados."
+  ],
+  [
+   "Oír la confesión de las estatuas",
+   "nerve",
+   9,
+   "Un santo sin cabeza confiesa que el Heraldo fue un guardián humano.",
+   "Los relojes sin agujas hacen sonar una hora que nadie vivió."
+  ],
+  [
+   "Tocar la piedra con el sello reunido",
+   "reason",
+   10,
+   "La piedra acepta los cinco indicios y expone la grieta que debe cerrarse.",
+   "El altar aprende el latido de tu corazón y acelera la llegada del océano."
+  ]
+ ]
+};
+for(const c of CASES){c.locations=LOCATION_SETS[c.id].map(([name,description,text,stat,difficulty,success,failure,reward],index)=>{const [altText,altStat,altDifficulty,altSuccess,altFailure]=ALTERNATE_INVESTIGATIONS[c.id][index];return {name,description,options:[{text,stat,difficulty,success,failure,reward},{text:altText,stat:altStat,difficulty:altDifficulty,success:altSuccess,failure:altFailure,reward:1}]};});}
