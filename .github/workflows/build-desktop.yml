@@ -1,0 +1,61 @@
+name: Compilación y verificación de escritorio
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'assets/**'
+      - 'desktop/**'
+      - 'index.html'
+      - 'styles.css'
+      - 'package.json'
+      - '.github/workflows/**'
+      - 'tests/**'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sintaxis y pruebas
+        run: |
+          npm run check
+          npm test
+      - name: Seguridad de rutas y recursos
+        run: node --test tests/desktop.test.mjs tests/art.test.mjs
+  package:
+    needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            command: dist:linux
+            artifact: linux-appimage
+          - os: windows-2022
+            command: dist:win
+            artifact: windows-portable
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar dependencias
+        run: npm install --no-audit --no-fund
+      - name: Compilar distribución nativa
+        run: npm run ${{ matrix.command }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Subir instaladores para QA
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-404-${{ matrix.artifact }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

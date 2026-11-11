@@ -293,3 +293,24 @@ header {background-position:center center;}
 .action-conclude summary{color:#f0c1af}
 
 .layout-head .combat-advice{width:100%;max-width:none;box-sizing:border-box;margin:10px 0 0}
+
+/* WORLD-404 v2: archiving-focused navigation, no palette replacement. */
+.main-menu{width:min(550px,calc(100vw - 36px));max-height:calc(100vh - 40px);padding:0;border:3px double #d6cbb5;background:#0d0b09;color:#f5f0e6;box-shadow:8px 8px #020201;overflow:auto}
+.main-menu::backdrop{background:rgba(2,2,2,.87)}
+.menu-paper{padding:clamp(20px,4vw,36px);background:repeating-linear-gradient(160deg,#15110e 0 8px,#100e0b 8px 16px)}
+.menu-paper small{font:700 11px/1.5 'Courier New',monospace;color:#c8bd85;letter-spacing:1px}
+.menu-paper h2{font:900 clamp(22px,4vw,30px)/1.15 Georgia,serif;color:#f5f0e6;margin:16px 0}
+.menu-paper p{font:14px/1.6 Georgia,serif;color:#e0d4be}
+.menu-paper nav{display:grid;grid-template-columns:1fr;gap:10px;margin:23px 0}
+.menu-paper nav button,.menu-paper .menu-close{width:100%;min-height:48px;text-align:left;border:1px solid #c6bba8;padding:11px 14px;background:#15120f;color:#f7e7cb;font:800 13px/1.4 'Courier New',monospace}
+.menu-paper nav button:first-child{background:#d6c99d;color:#090806}
+.menu-paper button:disabled{opacity:.45;cursor:not-allowed}
+.menu-paper button:focus-visible,.action-entry button:focus-visible,.archive-filter:focus-visible,.map-pin:focus-visible{outline:3px solid #f4e6a9;outline-offset:4px}
+.action-entry{min-width:0;display:flex;flex-direction:column;gap:5px}
+.action-entry button{min-height:48px;touch-action:manipulation}
+.action-hint{font:12px/1.5 'Courier New',monospace;color:#ddd0b7;padding:0 2px}
+.map-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin:12px 0 0;padding:0;list-style:none}
+.map-legend li{border-left:3px solid #b7aa86;background:#11100d;padding:9px;font:12px/1.5 'Courier New',monospace;color:#ded2be}
+.archive-filter{background:#130f0d;color:#f5e9d6;border:1px solid #a89b88;width:100%;max-width:320px;padding:10px;margin:8px 0;font:800 12px/1.4 'Courier New',monospace}
+@media(max-width:520px){.main-menu{width:calc(100vw - 18px)}.menu-paper nav button{font-size:12px}.map-legend{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.main-menu,.menu-paper,.action-entry button{scroll-behavior:auto;transition:none!important}}
