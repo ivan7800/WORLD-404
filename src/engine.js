@@ -158,7 +158,7 @@ export function fight(s,action,rng=Math.random){
   log(s,'La huida fracasa.');
  }else return s;
  if(b.affliction==='hemorrhage'&&b.afflictionTurns>0){s.health-=1;b.afflictionTurns--;log(s,'La hemorragia te cuesta 1 de salud.');if(b.afflictionTurns===0)b.affliction=null;}
- if(b.hp<=0&&!b.optional&&c.id==='cripta'&&b.stage===1){b.stage=2;b.hp=16;b.maxHp=16;b.turn=1;b.exposed=false;s.sanity=Math.max(1,s.sanity-2);s.doom+=5;log(s,'SEGUNDA FASE: el Heraldo se rompe y emerge la Marea que vivía en su interior.');return checkEnd(s);}
+ if(b.hp<=0&&!b.optional&&c.id==='cripta'&&b.stage===1){b.stage=2;b.hp=12;b.maxHp=12;b.turn=1;b.exposed=false;s.sanity=Math.max(1,s.sanity-2);s.doom+=5;log(s,'SEGUNDA FASE: el Heraldo se rompe y emerge la Marea que vivía en su interior.');return checkEnd(s);}
  if(b.hp<=0&&b.optional){const a=ANOMALIES[c.id];const record=s.anomalies.find(x=>x.caseId===c.id&&x.method==='combat');if(record)record.success=true;s.combat=null;s.combatWins++;s.supplies=Math.min(8,s.supplies+2);s.resolve++;s.notes.push(a.title+': '+a.reward);log(s,'ANOMALÍA CONTENIDA: '+a.reward);s.phase='map';return checkEnd(s);}
  if(b.hp<=0){if(c.id==='cripta')s.bossDefeated=true;s.combatWins=(s.combatWins||0)+1;log(s,`La criatura cae. Recuperas: ${c.clue}.`);return finishCase(s);}
  if(b.stagger){b.stagger=0;b.ward=0;b.guard=false;b.turn++;log(s,'La criatura queda interrumpida: no actúa este turno.');return checkEnd(s);}
