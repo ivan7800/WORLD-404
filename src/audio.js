@@ -253,7 +253,15 @@ export async function toggleAudio() {
    context=audio;
    mixer=graph;
   }
-  await context.resume();
+  let timer;
+  try{
+   await Promise.race([
+    context.resume(),
+    new Promise((_,reject)=>{
+     timer=setTimeout(()=>reject(new Error('La salida de audio no respondió')),4500);
+    })
+   ]);
+  }finally{clearTimeout(timer);}
   if(attempt!==activation)return enabled;
   enabled=true;
   mix();

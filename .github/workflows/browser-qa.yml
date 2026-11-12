@@ -23,6 +23,15 @@ jobs:
         run: |
           npm install --no-save --omit=dev playwright@1.55.1
           npx playwright install --with-deps chromium firefox
+      - name: Preparar una salida de audio virtual
+        run: |
+          if ! command -v pulseaudio >/dev/null || ! command -v pactl >/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y pulseaudio pulseaudio-utils
+          fi
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=world404
+          pactl set-default-sink world404
       - name: Comprobar navegación y capturar escenas
         run: node tests/browser-smoke.mjs
       - name: Publicar capturas reales
