@@ -133,3 +133,33 @@ export const ALTERNATE_INVESTIGATIONS={
  ]
 };
 for(const c of CASES){c.locations=LOCATION_SETS[c.id].map(([name,description,text,stat,difficulty,success,failure,reward],index)=>{const [altText,altStat,altDifficulty,altSuccess,altFailure]=ALTERNATE_INVESTIGATIONS[c.id][index];return {name,description,options:[{text,stat,difficulty,success,failure,reward},{text:altText,stat:altStat,difficulty:altDifficulty,success:altSuccess,failure:altFailure,reward:1}]};});}
+
+
+// Each location leaves a physical trace even if the chosen approach goes wrong.
+export const CASE_EVIDENCE = {
+ faro: [
+  'La campana se calla solo cuando su cuerda dibuja una espiral.',
+  'La llave del farero tiene forma de espiral. Al acercarla a la lente, el pulso se corta.',
+  'Una etiqueta del generador: «No oriente la lente al mar. Interrumpa el pulso en la ranura espiral».'
+ ],
+ hospital: [
+  'El libro de ingresos cambia de fecha. Los partes de traslado al sótano conservan su numeración.',
+  'Las etiquetas de las camas apuntan al sótano en el mismo orden en que desaparecieron sus ocupantes.',
+  'Las muestras llevan números de traslado al sótano. Coinciden con los de las camas; las fechas no coinciden.'
+ ],
+ mercado: [
+  'Los tres destinatarios del cargamento firmaron con el dibujo de una cicatriz idéntica.',
+  'El subastador rechaza dinero. Solo reconoce las pujas de quienes muestran la misma cicatriz.',
+  'El contrato identifica al comprador por su cicatriz. La etiqueta del almacén solo indica el peso del lote.'
+ ],
+ tuneles: [
+  'Sobre la compuerta de salida, las notas están grabadas de derecha a izquierda.',
+  'El cartel del antiguo tren indica: «Para evacuar, repita la señal empezando por la última nota».',
+  'El coro canta hacia dentro. Al reproducir la grabación al revés, el cerrojo cede.'
+ ],
+ cripta: [
+  'Las conchas tienen cinco fechas de desaparición ordenadas de la más antigua a la más reciente.',
+  'Bajo cada santo hay un hueco para una prueba. Los números del pedestal siguen las fechas de desaparición.',
+  'La inscripción dice: «Devuelve lo perdido por orden de ausencia». El altar tiene cinco huecos y ningún espacio para un nombre nuevo.'
+ ]
+};

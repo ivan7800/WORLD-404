@@ -22,6 +22,6 @@ test('interfaz permite exportar e importar partidas',()=>{
  assert.match(js,/WORLD-404-partida\.json/);
 });
 test('versión del paquete y presentación consistentes',()=>{
- assert.equal(JSON.parse(get('package.json')).version,'1.9.0');
- assert.match(get('index.html'),/WORLD-404 · v1\.9/);
+ assert.equal(JSON.parse(get('package.json')).version,'2.2.0');
+ assert.match(get('index.html'),/WORLD-404 · v2\.2/);
 });

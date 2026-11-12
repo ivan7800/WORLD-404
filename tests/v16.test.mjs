@@ -39,9 +39,9 @@ test('la hoja de estilo usa tinta monocroma y conserva puntos de foco y móvil',
 });
 test('el empaquetado Electron incluye los recursos artísticos',()=>{
  const pkg=JSON.parse(file('package.json'));
- assert.equal(pkg.version,'1.9.0');
+ assert.equal(pkg.version,'2.2.0');
  assert.ok(pkg.build.files.includes('assets/**/*'));
- assert.match(file('index.html'),/v1\.9/);
+ assert.match(file('index.html'),/v2\.2/);
  assert.match(file('desktop/paths.cjs'),/assets\\\/art/);
 });
 test('efectos opcionales siguen siendo reversibles en la capa visual',()=>{
