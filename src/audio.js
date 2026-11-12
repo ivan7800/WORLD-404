@@ -254,12 +254,13 @@ export async function toggleAudio() {
    mixer=graph;
   }
   await context.resume();
-  if(attempt!==activation||context.state!=='running')return enabled;
+  if(attempt!==activation)return enabled;
   enabled=true;
   mix();
   updateSoundscape();
   return true;
- }catch{
+ }catch(error){
+  console.warn('WORLD-404: no se pudo activar Web Audio',error);
   enabled=false;
   mix();
   return false;

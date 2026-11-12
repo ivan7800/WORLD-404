@@ -36,8 +36,11 @@ async function checkAudio(page){
    return samples.reduce((peak,sample)=>Math.max(peak,Math.abs(sample)),0);
   };
  });
+ const diagnostics=[];
+ page.on('console',message=>{if(message.type()==='warning')diagnostics.push(message.text());});
  await page.locator('#audio').click();
- await page.waitForFunction(()=>document.querySelector('#audio').getAttribute('aria-pressed')==='true');
+ await page.waitForFunction(()=>!document.querySelector('#audio').disabled);
+ assert.equal(await page.locator('#audio').getAttribute('aria-pressed'),'true',diagnostics.join(' | '));
  await page.waitForFunction(()=>window.mixPeak()>.004);
  assert.equal(await page.locator('#audio').innerText(),'SONIDO: SÍ');
  await page.locator('#audio-options-open').click();
