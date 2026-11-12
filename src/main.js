@@ -12,19 +12,26 @@ import {canPrepareSeal,prepareSeal,availableTwist,startTwist,resolveTwist} from 
 import {incidenceFor,selectIncidence,INCIDENCES} from './variations.js';
 function incidenceForCase(t){return INCIDENCES[t.caseId]?.[t.variant]||null;}
 import {nextObjective,combatAdvice,caseProgress} from './guide.js';
-import {drawArt,drawPortrait,setVisualEffects,WORLD404_ART_ASSETS} from './art.js';import {toggleAudio,sound,setAmbience} from './audio.js';
+import {drawArt,drawPortrait,setVisualEffects,WORLD404_ART_ASSETS} from './art.js';import {
+ actionCue, configureAudio, isAudioEnabled, setAmbience, setAudioForeground, sound, toggleAudio
+} from './audio.js';
 const $=id=>document.getElementById(id);
 const storage=(()=>{try{return localStorage;}catch{return null;}})();
 const loadedProgress=loadProgress(storage);
 let s=loadedProgress?.state||initialState(),hasCampaign=Boolean(loadedProgress);
 function persist(){return saveProgress(storage,s);}
 function act(fn, noise='click') {
- const phase = s.phase;
+ const {phase}=s;
+ const before={
+  phase,caseIndex:s.caseIndex,stage:s.combat?.stage,district:s.currentDistrict,
+  linked:s.linkedClues.length,failed:s.failedDeductions.length,echoes:s.echoes.length,
+  decisions:s.decisions.length,seals:s.preparedSeals.length,notes:s.notes.length
+ };
  const previous = document.activeElement;
  const label = previous?.textContent;
  fn();
  hasCampaign = true;
- sound(noise);
+ sound(actionCue(before,s,noise));
  const saved = persist();
  render();
  const status = $('save-status');
@@ -81,19 +88,36 @@ if(s.phase==='intro'){$('title').textContent='El mar ha empezado a recordar';$('
  panel.append(list);groupActions('primary').content.append(panel);puzzle.options.forEach((option,i)=>button('DEDUCIR · '+option,()=>act(()=>solvePuzzle(s,i),'click')));}
  if(availableEcho(s)){button('ESCUCHAR INTERFERENCIA DEL ARCHIVO',()=>act(()=>resolveEcho(s,0)));button('DESTRUIR LA GRABACIÓN',()=>act(()=>resolveEcho(s,1)));}if(s.visited.filter(v=>v.startsWith(c.id+':')).length)button('CONSULTAR NOTAS ('+s.notes.length+')',()=>{alert(s.notes.slice(-12).join('\n\n')||'No hay pruebas adicionales.');});c.choices.forEach((ch,i)=>button('CERRAR INVESTIGACIÓN · '+ch.text+` [${checkLabel(ch,ch.threshold)}]`,()=>act(()=>explore(s,i))));}else if(s.phase==='event'){const ev=EVENTS.find(x=>x.id===s.pendingEvent);$('title').textContent=ev.title;$('story').textContent=ev.description;ev.options.forEach((op,i)=>button(op.text+' ['+(op.stat==='reason'?'RAZÓN':'VOLUNTAD')+']',()=>act(()=>resolveEvent(s,i))));}else if(s.phase==='scene'){const place=c.locations[s.scene];$('title').textContent=place.name;$('story').textContent=place.description+'\n\nLa ciudad parece observarte. Elige cómo actuar.';place.options.forEach((op,i)=>button(op.text+' ['+checkLabel(op,op.difficulty)+']',()=>act(()=>investigateScene(s,i),'reveal')));}else if(s.phase==='twist'){const twist=incidenceFor(s);$('title').textContent=twist.title;$('story').textContent=twist.scene+'\n\nEste acontecimiento es distinto según la partida. Tu elección modificará los próximos combates.';twist.options.forEach((op,i)=>button(op.text,()=>act(()=>resolveTwist(s,i))));}else if(s.phase==='omen'){const o=OMENS[c.id];$('title').textContent=o.title;$('story').textContent=o.intro+'\n\nLa decisión quedará registrada en el archivo.';o.options.forEach((op,i)=>button(op.text,()=>act(()=>resolveOmen(s,i))));}else if(s.phase==='anomaly'){const a=ANOMALIES[c.id];$('title').textContent=a.title;$('story').textContent=a.description+'\n\nPuedes intentar un ritual arriesgado o combatir con esta criatura. Solo tendrás una oportunidad.';button('INTENTAR RITUAL ['+(a.stat==='reason'?'RAZÓN':'VOLUNTAD')+']',()=>act(()=>resolveAnomaly(s,0)));button('COMBATIR · '+a.enemy,()=>act(()=>resolveAnomaly(s,1),'hit'));}else if(s.phase==='side-story'){const story=SIDE_STORIES[c.id];$('title').textContent=story.title;$('story').textContent=story.intro+'\n\nUna historia opcional: si la resuelves correctamente, sus consecuencias persistirán.';story.choices.forEach((op,i)=>button(op.text+' ['+(op.stat==='reason'?'RAZÓN':'VOLUNTAD')+']',()=>act(()=>resolveSideStory(s,i))));}else if(s.phase==='dilemma'){const d=DILEMMAS[c.id];$('title').textContent=d.title;$('story').textContent=d.description+'\n\nTu elección quedará registrada y afectará al destino de San Telmo.';d.options.forEach((op,i)=>button(op.text,()=>act(()=>chooseDilemma(s,i))));}else if(s.phase==='encounter'){$('title').textContent='Algo ha respondido';$('story').textContent=s.log[0]+'\n\nAl salir, el pasillo se oscurece. Una figura imposible te bloquea el camino. Prepara el encuentro antes de entrar en combate. Una vez dentro podrás intentar huir.';if(canPrepareSeal(s))button('PREPARAR SELLO · 1 SUMINISTRO · DEBILITAR CRIATURA',()=>act(()=>prepareSeal(s)));button('ENFRENTARSE A LA CRIATURA',()=>act(()=>startCombat(s),'hit'));}else if(s.phase==='combat'){$('title').textContent=s.combat.optional?ANOMALIES[c.id].enemy:c.enemy;const intent=nextIntent(s);$('story').textContent=`ENEMIGO: ${s.combat.hp}/${s.combat.maxHp} PV · FASE ${s.combat.stage||1} · TURNO ${s.combat.turn}\n\nINTENCIÓN ENEMIGA: ${intent.name.toUpperCase()} (${intent.kind==='mind'?'ATAQUE MENTAL':intent.kind==='heavy'?'ATAQUE FUERTE':'ATAQUE FÍSICO'})\n\n${s.combat.affliction?'ESTADO ALTERADO: HEMORRAGIA ('+s.combat.afflictionTurns+' turnos). Puedes vendarte.\n\n':''}${s.combat.exposed?'PUNTO DÉBIL IDENTIFICADO: el ataque preciso obtiene bonificación.':'Estudiar al enemigo revela un punto débil.'}\nIMPULSO: ${s.combat.momentum||0}/3 · con 2 puedes ejecutar RUPTURA RITUAL para interrumpir un ataque.\n\nAnticipa sus patrones y administra tus recursos.`;button('ATACAR · 1D6 (+NAVAJA) · +1 IMPULSO',()=>act(()=>fight(s,'attack'),'hit'),'Daño normal; acumula un impulso hasta un máximo de tres.');
 button('ATAQUE PRECISO · 1D6-2 · +5 SI ESTUDIADO',()=>act(()=>fight(s,'precise'),'hit'),'Obtiene una bonificación si antes has estudiado a la criatura.');
-button('ESTUDIAR Y CUBRIRSE · +1 impulso',()=>act(()=>fight(s,'study')),'Revela debilidad y reduce el daño del siguiente ataque.');
-if(s.combat.focusUses<2||s.combat.focusUses==null)button('CONCENTRARSE Y CUBRIRSE · +2 CORDURA',()=>act(()=>fight(s,'focus')),'Dos usos por combate. Reduce el daño de la próxima acción enemiga.');
-else button('CUBRIRSE',()=>act(()=>fight(s,'guard')),'Reduce el daño de la próxima acción enemiga.');
-if(s.combat.affliction)button('VENDAR Y CUBRIRSE',()=>act(()=>fight(s,'recover')),'Detiene la hemorragia y reduce el daño de la próxima acción enemiga.');
-if((s.combat.momentum||0)>=2)button('RUPTURA RITUAL · 2 impulsos · INTERRUMPE',()=>act(()=>fight(s,'rupture'),'hit'),'Ataque fuerte que cancela el próximo movimiento del enemigo.');
-if((s.combat.momentum||0)>=1)button('CÍRCULO DE SAL · 1 IMPULSO · -2 MAREA',()=>act(()=>fight(s,'ward')),'Reduce la Marea y bloquea especialmente bien el daño mental.');if(s.inventory.includes('medkit')&&s.health<s.maxHealth)button('BOTIQUÍN · +6 SALUD · CONSUME TURNO',()=>act(()=>fight(s,'medkit')));if(s.inventory.includes('tonic')&&s.sanity<s.maxSanity)button('TÓNICO · +4 CORDURA · CONSUME TURNO',()=>act(()=>fight(s,'tonic')));button('INTENTAR HUIR · VOLUNTAD + D6 ≥ 10 · -2 SALUD / +14 MAREA',()=>act(()=>fight(s,'flee')),'Si funciona, regresas al mapa. La criatura sigue viva.');}else if(s.phase==='interlude'){$('title').textContent='Preparativos en el archivo';$('story').textContent=`Has reunido ${s.clues.length} pistas y ${s.resolve} claves del ritual. Decisiones registradas: ${s.decisions.length}.  La ciudad cambia mientras investigas. Una noche más, las olas golpean el muelle como si quisieran entrar.\n\nRecuperas 3 de salud y 2 de cordura al cerrar un expediente, pero la Marea aumenta.`;if(s.supplies>=2){button('COMPRAR BOTIQUÍN (2 SUM.)',()=>act(()=>buySupply(s,'medkit')));button('COMPRAR TÓNICO (2 SUM.)',()=>act(()=>buySupply(s,'tonic')));}{const last=CASES[s.caseIndex-1];const aftermath=last&&aftermathForCase(s,last.id);if(aftermath)$('story').textContent+='\n\nCONSECUENCIA DEL EXPEDIENTE ANTERIOR: '+aftermath;}button('INVESTIGAR EL SIGUIENTE CASO',()=>act(()=>advance(s)));}else{const endings={sellado:['La ciudad que resistió','Reconstruyes el ritual con las cinco pruebas y consigues sellar la grieta. San Telmo sobrevivirá, aunque las sirenas volverán a sonar en sueños.'],rescate:['Los nombres que regresaron','Rompes el ciclo sin borrar a las víctimas. Algunos desaparecidos regresan al puerto al amanecer, aunque no todos recuerdan dónde estuvieron.'],supervivencia:['La verdad bajo el agua','Detienes la invocación, pero el precio ha sido demasiado alto. San Telmo permanece en los mapas; algunos de sus habitantes, no.'],muerte:['Expediente sin resolver','Tu cuerpo aparece en la playa tres días después. La carta original vuelve a estar sobre la mesa del archivo.'],locura:['La voz del oleaje','Dejas de distinguir tus recuerdos de los de la ciudad. Ahora eres una de las voces que llaman desde el fondo.'],marea:['La última pleamar','La Marea alcanza el 100 %. El océano reclama San Telmo. Al amanecer, nadie encuentra su nombre en ningún mapa.']};[$('title').textContent,$('story').textContent]=endings[s.ending]||endings.marea; {const epilogue=epilogueLines(s);if(epilogue.length)$('story').textContent+='\n\nHUELLAS DE SAN TELMO\n'+epilogue.join('\n');} if(s.caseTwists?.length){const lines=s.caseTwists.slice(-3).map(t=>{const incident=incidenceForCase(t);return incident?`• ${incident.title}: ${incident.options[t.choice].result}`:''}).filter(Boolean);$('story').textContent+='\n\nHUELLAS DE TU PARTIDA\n'+lines.join('\n');}button('VOLVER A EMPEZAR',()=>{if(confirm('¿Comenzar una nueva partida?'))act(()=>{s=initialState();});});}drawArt($('art'),s);drawPortrait($('portrait'),s);renderMap();setAmbience(s.phase,s.currentDistrict);}
+button('ESTUDIAR Y CUBRIRSE · +1 impulso',()=>act(()=>fight(s,'study'),'guard'),'Revela debilidad y reduce el daño del siguiente ataque.');
+if(s.combat.focusUses<2||s.combat.focusUses==null)button('CONCENTRARSE Y CUBRIRSE · +2 CORDURA',()=>act(()=>fight(s,'focus'),'guard'),'Dos usos por combate. Reduce el daño de la próxima acción enemiga.');
+else button('CUBRIRSE',()=>act(()=>fight(s,'guard'),'guard'),'Reduce el daño de la próxima acción enemiga.');
+if(s.combat.affliction)button('VENDAR Y CUBRIRSE',()=>act(()=>fight(s,'recover'),'guard'),'Detiene la hemorragia y reduce el daño de la próxima acción enemiga.');
+if((s.combat.momentum||0)>=2)button('RUPTURA RITUAL · 2 impulsos · INTERRUMPE',()=>act(()=>fight(s,'rupture'),'ritual'),'Ataque fuerte que cancela el próximo movimiento del enemigo.');
+if((s.combat.momentum||0)>=1)button('CÍRCULO DE SAL · 1 IMPULSO · -2 MAREA',()=>act(()=>fight(s,'ward'),'ritual'),'Reduce la Marea y bloquea especialmente bien el daño mental.');if(s.inventory.includes('medkit')&&s.health<s.maxHealth)button('BOTIQUÍN · +6 SALUD · CONSUME TURNO',()=>act(()=>fight(s,'medkit'),'heal'));if(s.inventory.includes('tonic')&&s.sanity<s.maxSanity)button('TÓNICO · +4 CORDURA · CONSUME TURNO',()=>act(()=>fight(s,'tonic'),'heal'));button('INTENTAR HUIR · VOLUNTAD + D6 ≥ 10 · -2 SALUD / +14 MAREA',()=>act(()=>fight(s,'flee')),'Si funciona, regresas al mapa. La criatura sigue viva.');}else if(s.phase==='interlude'){$('title').textContent='Preparativos en el archivo';$('story').textContent=`Has reunido ${s.clues.length} pistas y ${s.resolve} claves del ritual. Decisiones registradas: ${s.decisions.length}.  La ciudad cambia mientras investigas. Una noche más, las olas golpean el muelle como si quisieran entrar.\n\nRecuperas 3 de salud y 2 de cordura al cerrar un expediente, pero la Marea aumenta.`;if(s.supplies>=2){button('COMPRAR BOTIQUÍN (2 SUM.)',()=>act(()=>buySupply(s,'medkit')));button('COMPRAR TÓNICO (2 SUM.)',()=>act(()=>buySupply(s,'tonic')));}{const last=CASES[s.caseIndex-1];const aftermath=last&&aftermathForCase(s,last.id);if(aftermath)$('story').textContent+='\n\nCONSECUENCIA DEL EXPEDIENTE ANTERIOR: '+aftermath;}button('INVESTIGAR EL SIGUIENTE CASO',()=>act(()=>advance(s)));}else{const endings={sellado:['La ciudad que resistió','Reconstruyes el ritual con las cinco pruebas y consigues sellar la grieta. San Telmo sobrevivirá, aunque las sirenas volverán a sonar en sueños.'],rescate:['Los nombres que regresaron','Rompes el ciclo sin borrar a las víctimas. Algunos desaparecidos regresan al puerto al amanecer, aunque no todos recuerdan dónde estuvieron.'],supervivencia:['La verdad bajo el agua','Detienes la invocación, pero el precio ha sido demasiado alto. San Telmo permanece en los mapas; algunos de sus habitantes, no.'],muerte:['Expediente sin resolver','Tu cuerpo aparece en la playa tres días después. La carta original vuelve a estar sobre la mesa del archivo.'],locura:['La voz del oleaje','Dejas de distinguir tus recuerdos de los de la ciudad. Ahora eres una de las voces que llaman desde el fondo.'],marea:['La última pleamar','La Marea alcanza el 100 %. El océano reclama San Telmo. Al amanecer, nadie encuentra su nombre en ningún mapa.']};[$('title').textContent,$('story').textContent]=endings[s.ending]||endings.marea; {const epilogue=epilogueLines(s);if(epilogue.length)$('story').textContent+='\n\nHUELLAS DE SAN TELMO\n'+epilogue.join('\n');} if(s.caseTwists?.length){const lines=s.caseTwists.slice(-3).map(t=>{const incident=incidenceForCase(t);return incident?`• ${incident.title}: ${incident.options[t.choice].result}`:''}).filter(Boolean);$('story').textContent+='\n\nHUELLAS DE TU PARTIDA\n'+lines.join('\n');}button('VOLVER A EMPEZAR',()=>{if(confirm('¿Comenzar una nueva partida?'))act(()=>{s=initialState();});});}drawArt($('art'),s);drawPortrait($('portrait'),s);renderMap();setAmbience({
+ phase:s.phase,caseId:c?.id,district:s.currentDistrict,doom:s.doom,sanity:s.sanity,
+ maxSanity:s.maxSanity,stage:s.combat?.stage,ending:s.ending
+});}
 const menu=$('main-menu');
 function openMenu(){if(!menu||menu.open)return;$('menu-continue').disabled=!hasCampaign;menu.showModal();}
 $('menu-open').addEventListener('click',openMenu);
 $('menu-close').addEventListener('click',()=>menu.close());
 $('menu-continue').addEventListener('click',()=>menu.close());
 $('menu-new').addEventListener('click',()=>{if(hasCampaign&&!confirm('¿Comenzar una nueva partida? Se conserva una copia previa si hay espacio.'))return;s=initialState();hasCampaign=true;if(!persist())alert('No se puede guardar aquí. Exporta tu partida para conservarla.');render();menu.close();});
-$('menu-options').addEventListener('click',()=>{menu.close();$('effects').focus();$('effects').scrollIntoView({block:'center'});});
+const audioOptions=$('audio-options');
+let returnToMenu=false;
+$('menu-options').addEventListener('click',()=>{
+ returnToMenu=true;
+ menu.close();
+ audioOptions.showModal();
+});
+$('audio-options-open').addEventListener('click',()=>audioOptions.showModal());
+$('audio-options-close').addEventListener('click',()=>audioOptions.close());
+audioOptions.addEventListener('close',()=>{
+ if(!returnToMenu)return;
+ returnToMenu=false;
+ openMenu();
+ $('menu-options').focus();
+});
 $('menu-help').addEventListener('click',()=>{menu.close();$('help').open=true;$('help').scrollIntoView({block:'center'});});
 $('save').addEventListener('click',()=>{const ok=persist();if(ok){hasCampaign=true;$('save-status').hidden=true;}sound();$('save').textContent=ok?'GUARDADO ✓':'ERROR AL GUARDAR';if(!ok)alert('El navegador no pudo guardar. Exporta tu partida en JSON.');setTimeout(()=>$('save').textContent='GUARDAR',1800);});// Partidas portables: el origen localhost es estable en el puerto 8765, y la copia JSON
 // permite mover el progreso entre Windows, Linux Mint o navegadores diferentes.
@@ -130,7 +154,55 @@ $('effects').addEventListener('click',()=>{
  drawArt($('art'),s);drawPortrait($('portrait'),s);
 });
 $('help-open').addEventListener('click',()=>{$('help').open=true;$('help').scrollIntoView({behavior:'smooth',block:'nearest'});});
-$('new').addEventListener('click',()=>{if(confirm('¿Comenzar una partida nueva? Se intentará conservar una copia previa.'))act(()=>{s=initialState();hasCampaign=true;});});$('audio').addEventListener('click',()=>{$('audio').textContent='SONIDO: '+(toggleAudio()?'SÍ':'NO');setAmbience(s.phase,s.currentDistrict);sound();});render();if(typeof menu?.showModal==='function')openMenu();
+$('new').addEventListener('click',()=>{if(confirm('¿Comenzar una partida nueva? Se intentará conservar una copia previa.'))act(()=>{s=initialState();hasCampaign=true;});});const audioPrefKey='world404:audio';
+let audioSettings;
+try{audioSettings=JSON.parse(storage?.getItem(audioPrefKey)||'null');}catch{}
+audioSettings=configureAudio(audioSettings);
+for(const key of Object.keys(audioSettings)){
+ const input=$('volume-'+key);
+ const output=$('volume-'+key+'-value');
+ input.value=audioSettings[key];
+ output.value=audioSettings[key]+' %';
+ input.addEventListener('input',()=>{
+  audioSettings=configureAudio({...audioSettings,[key]:Number(input.value)});
+  output.value=audioSettings[key]+' %';
+  try{storage?.setItem(audioPrefKey,JSON.stringify(audioSettings));}catch{}
+ });
+}
+const audioButtons=[$('audio'),$('audio-options-toggle')];
+function updateAudioButtons(){
+ const enabled=isAudioEnabled();
+ for(const control of audioButtons){
+  control.textContent='SONIDO: '+(enabled?'SÍ':'NO');
+  control.setAttribute('aria-pressed',String(enabled));
+ }
+}
+async function switchAudio(){
+ for(const control of audioButtons)control.disabled=true;
+ const wasEnabled=isAudioEnabled();
+ try{
+  const enabled=await toggleAudio();
+  $('audio-status').textContent=!wasEnabled&&!enabled?'No se pudo iniciar el sonido. Vuelve a pulsar el botón para reintentarlo.':'';
+  $('audio-options-status').textContent=$('audio-status').textContent;
+  updateAudioButtons();
+  if(enabled)sound('click');
+ }finally{
+  for(const control of audioButtons)control.disabled=false;
+ }
+}
+for(const control of audioButtons)control.addEventListener('click',switchAudio);
+$('audio-preview').addEventListener('click',async()=>{
+ if(!audioSettings.master||!audioSettings.effects){
+  $('audio-options-status').textContent='Sube el volumen general y el de efectos para escuchar la prueba.';
+  return;
+ }
+ $('audio-options-status').textContent='';
+ if(!isAudioEnabled())await switchAudio();
+ if(isAudioEnabled())sound('deduction');
+});
+document.addEventListener('visibilitychange',()=>setAudioForeground(!document.hidden));
+setAudioForeground(!document.hidden);
+render();if(typeof menu?.showModal==='function')openMenu();
 
 function renderMap(){
  const root=$('map');if(!root)return;root.replaceChildren();
@@ -215,7 +287,7 @@ function renderArchive(){
  }
 }
 document.addEventListener('keydown',event=>{
- if(event.repeat||event.altKey||event.ctrlKey||event.metaKey)return;
+ if(audioOptions.open||event.repeat||event.altKey||event.ctrlKey||event.metaKey)return;
  const target=event.target;
  if(target instanceof HTMLElement && (target.matches('input,textarea,select')||target.isContentEditable))return;
  if(event.key.toLowerCase()==='m'){openMenu();return;}
