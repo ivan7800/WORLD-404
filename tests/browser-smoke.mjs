@@ -18,6 +18,90 @@ async function ready(){
  }
  throw Error('Servidor local no disponible');
 }
+async function checkAudio(page){
+ await page.evaluate(()=>{
+  // Inspect the final mix with the browser's real Web Audio nodes.
+  const connect=AudioNode.prototype.connect;
+  AudioNode.prototype.connect=function(destination,...ports){
+   if(destination===this.context.destination&&this instanceof GainNode&&!window.mixProbe){
+    window.mixProbe=this.context.createAnalyser();
+    connect.call(this,window.mixProbe);
+   }
+   return connect.call(this,destination,...ports);
+  };
+  window.mixPeak=()=>{
+   if(!window.mixProbe)return -1;
+   const samples=new Float32Array(window.mixProbe.fftSize);
+   window.mixProbe.getFloatTimeDomainData(samples);
+   return samples.reduce((peak,sample)=>Math.max(peak,Math.abs(sample)),0);
+  };
+ });
+ const diagnostics=[];
+ page.on('console',message=>{if(message.type()==='warning')diagnostics.push(message.text());});
+ await page.locator('#audio').click();
+ await page.waitForFunction(()=>!document.querySelector('#audio').disabled);
+ assert.equal(await page.locator('#audio').getAttribute('aria-pressed'),'true',diagnostics.join(' | '));
+ await page.waitForFunction(()=>window.mixPeak()>.004);
+ assert.equal(await page.locator('#audio').innerText(),'SONIDO: SÍ');
+ await page.locator('#audio-options-open').click();
+ const volume=(key,value)=>page.locator('#volume-'+key).fill(String(value));
+ const quiet=async()=>{
+  await page.waitForFunction(()=>window.mixPeak()>=0&&window.mixPeak()<.0005);
+ };
+ await volume('ambience',0);
+ await volume('music',0);
+ await quiet();
+ await page.locator('#audio-preview').click();
+ await page.waitForFunction(()=>window.mixPeak()>.004);
+ await volume('effects',0);
+ await quiet();
+ await page.locator('#audio-preview').click();
+ await page.waitForTimeout(160);
+ assert.ok(await page.evaluate(()=>window.mixPeak()<.0005),'Capa de efectos silenciada');
+ await volume('music',70);
+ await page.waitForFunction(()=>window.mixPeak()>.004);
+ await volume('master',0);
+ await quiet();
+ await volume('music',0);
+ await volume('ambience',80);
+ await volume('master',75);
+ await page.waitForFunction(()=>window.mixPeak()>.004);
+ await volume('music',37);
+ await volume('effects',75);
+ await page.locator('#audio-options-close').click();
+ await page.locator('#audio').click();
+ await quiet();
+ assert.equal(await page.locator('#audio').innerText(),'SONIDO: NO');
+ await page.reload();
+ await page.locator('#menu-options').click();
+ assert.equal(await page.locator('#volume-music').inputValue(),'37');
+ await page.keyboard.press('Escape');
+ await page.locator('#menu-continue').click();
+
+ const measurements=await page.evaluate(async()=>{
+  const {audioProfile,createSoundscape,playCue}=await import('/src/audio.js');
+  async function measure(scene,cue){
+   const sampleRate=22050;
+   const ctx=new OfflineAudioContext(2,sampleRate,sampleRate);
+   const music=ctx.createGain(),ambience=ctx.createGain();
+   music.connect(ctx.destination);ambience.connect(ctx.destination);
+   if(scene)createSoundscape(ctx,ambience,music,audioProfile(scene));
+   if(cue)playCue(ctx,ctx.destination,cue);
+   const buffer=await ctx.startRendering();
+   const data=buffer.getChannelData(0);
+   return data.reduce((sum,sample,index)=>({
+    peak:Math.max(sum.peak,Math.abs(sample)),
+    signature:sum.signature+Math.abs(sample)*(index+1)
+   }),{peak:0,signature:0});
+  }
+  const zones=['faro','hospital','mercado','tuneles','cripta'].map(caseId=>({phase:'map',caseId}));
+  return Promise.all([...zones,{phase:'combat',caseId:'cripta',stage:2,doom:83,sanity:3}]
+   .map(scene=>measure(scene)).concat(['reveal','tape','hit','ritual','phase'].map(cue=>measure(null,cue))));
+ });
+ for(const {peak} of measurements)assert.ok(peak>.005&&peak<.85,'Señal audible sin recorte digital: '+peak);
+ assert.equal(new Set(measurements.map(x=>x.signature.toFixed(2))).size,measurements.length);
+ console.log('Mezcla Web Audio: salida real, controles, silencio y persistencia comprobados');
+}
 async function campaign(browser, name, route){
  const mobile=route==='rescate';
  const context=await browser.newContext({
@@ -55,9 +139,7 @@ async function campaign(browser, name, route){
    await page.keyboard.press('Escape');
    await page.keyboard.press('m');
    await page.locator('#menu-continue').click();
-   await page.locator('#audio').click();
-   assert.equal(await page.locator('#audio').innerText(),'SONIDO: SÍ');
-   await page.locator('#audio').click();
+   await checkAudio(page);
   }
   for(let i=0;i<5;i++){
    const start=await save();

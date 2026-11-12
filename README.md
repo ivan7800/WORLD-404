@@ -7,6 +7,7 @@ Aventura de horror cósmico en San Telmo, 1987. Investiga cinco expedientes, re�
 - Cada escena deja una prueba física. El archivo la conserva y las deducciones muestran las pruebas que has reunido.
 - Las tiradas de investigación indican su probabilidad. Una deducción fallida queda registrada y solo una deducción correcta permite preparar un sello nuevo.
 - Puedes cubrirte tras agotar la concentración. Cuando ambas rutas finales son posibles, tu decisión sobre el Heraldo determina el desenlace.
+- Activa **Sonido** para oír el ambiente de cada expediente y sus cambios con la Marea, la cordura y el combate. **Volumen** permite ajustar y guardar la mezcla general, de ambiente, de música y de efectos en ese navegador.
 - El autoguardado acepta cintas escuchadas o destruidas y muestra un aviso visible si el navegador no puede guardar. Se conserva la compatibilidad con las partidas anteriores.
 
 `npm run check` comprueba la sintaxis, `npm test` ejecuta las pruebas del motor y `node tests/browser-smoke.mjs` recorre la campaña desde la interfaz con Playwright.

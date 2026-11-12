@@ -314,3 +314,11 @@ header {background-position:center center;}
 .archive-filter{background:#130f0d;color:#f5e9d6;border:1px solid #a89b88;width:100%;max-width:320px;padding:10px;margin:8px 0;font:800 12px/1.4 'Courier New',monospace}
 @media(max-width:520px){.main-menu{width:calc(100vw - 18px)}.menu-paper nav button{font-size:12px}.map-legend{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.main-menu,.menu-paper,.action-entry button{scroll-behavior:auto;transition:none!important}}
+
+/* Mixer controls share the archive menu's typography and colours. */
+.audio-levels{display:grid;gap:5px;margin:16px 0}
+.audio-levels label{display:flex;justify-content:space-between;gap:12px}
+.audio-levels input{width:100%;min-height:32px;margin:0 0 5px;accent-color:#d6c99d}
+.audio-levels input:focus-visible{outline:2px solid #f4e6a9;outline-offset:2px}
+#audio-options .menu-close{margin-top:12px}
+#audio-status:empty,#audio-options-status:empty{display:none}
