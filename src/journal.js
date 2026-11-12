@@ -1,3 +1,4 @@
+import {collectedEvidence} from './engine.js';
 import {CASES} from './data.js';
 /** Derived, read-only archive data. Does not change the saved game state. */
 export function archiveSummary(s){
@@ -11,6 +12,8 @@ export function archiveSummary(s){
    id:c.id,name:c.name,status:index<s.caseIndex?'CERRADO':current?'EN CURSO':'CLASIFICADO',
    locations,completed:locations.filter(l=>l.visited).length,
    evidence:s.linkedClues.includes(c.id),
+   deductionFailed:s.failedDeductions.includes(c.id),
+   traces:collectedEvidence(s,c),
    seal:s.preparedSeals?.includes(c.id)||false,
    decision:decision?decision.effect==='mercy'?'PROTECCIÓN':'REVELACIÓN':null,
    side:side?'REGISTRADA':null,anomaly:anomaly?'REGISTRADA':null,

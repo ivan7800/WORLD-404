@@ -14,7 +14,7 @@ function dispose(){
 }
 export function toggleAudio(){
  enabled=!enabled;
- if(enabled&&!context){const C=globalThis.AudioContext||globalThis.webkitAudioContext;if(C)try{context=new C();}catch{enabled=false;}}
+ if(enabled&&!context){const C=globalThis.AudioContext||globalThis.webkitAudioContext;if(C)try{context=new C();}catch{enabled=false;}else enabled=false;}
  if(enabled&&context?.state==='suspended')context.resume().catch(()=>{});
  if(!enabled)dispose();
  return enabled;

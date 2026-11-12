@@ -1,3 +1,18 @@
+# WORLD-404 v2.2 — El Archivo de la Marea Negra
+
+[Jugar en el navegador](https://ivan7800.github.io/WORLD-404/)
+
+Aventura de horror cósmico en San Telmo, 1987. Investiga cinco expedientes, reúne pruebas, decide a quién proteger y enfréntate a la Marea Negra.
+
+- Cada escena deja una prueba física. El archivo la conserva y las deducciones muestran las pruebas que has reunido.
+- Las tiradas de investigación indican su probabilidad. Una deducción fallida queda registrada y solo una deducción correcta permite preparar un sello nuevo.
+- Puedes cubrirte tras agotar la concentración. Cuando ambas rutas finales son posibles, tu decisión sobre el Heraldo determina el desenlace.
+- El autoguardado acepta cintas escuchadas o destruidas y muestra un aviso visible si el navegador no puede guardar. Se conserva la compatibilidad con las partidas anteriores.
+
+`npm run check` comprueba la sintaxis, `npm test` ejecuta las pruebas del motor y `node tests/browser-smoke.mjs` recorre la campaña desde la interfaz con Playwright.
+
+---
+
 # WORLD-404 v1.9 — El Archivo Cambiante
 
 Consulta `README-v1.9.md` para las novedades, instrucciones de juego, instalación y comprobación.
